@@ -3,6 +3,8 @@ package record
 import (
 	"github.com/shakinm/xlsReader/helpers"
 	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/encoding/simplifiedchinese"
+
 	"reflect"
 	"strings"
 	"unicode/utf16"
@@ -60,7 +62,7 @@ func (r *LabelBIFF8) GetString() string {
 		runes := utf16.Decode(name)
 		return string(runes)
 	} else {
-		return string(decodeWindows1251(r.rgb[:]))
+		return strings.TrimSpace(string(decodeGbk(r.rgb[:])))
 	}
 }
 
@@ -105,7 +107,7 @@ func (r *LabelBIFF5) GetCol() [2]byte {
 
 func (r *LabelBIFF5) GetString() string {
 	strLen := helpers.BytesToUint16(r.cch[:])
-	return strings.TrimSpace(string(decodeWindows1251(r.rgb[:int(strLen)])))
+	return strings.TrimSpace(string(decodeGbk(r.rgb[:int(strLen)])))
 }
 
 func (r *LabelBIFF5) GetFloat64() (fl float64) {
@@ -136,6 +138,12 @@ func (r *LabelBIFF5) Read(stream []byte) {
 
 func decodeWindows1251(ba []uint8) []uint8 {
 	dec := charmap.Windows1251.NewDecoder()
+	out, _ := dec.Bytes(ba)
+	return out
+}
+
+func decodeGbk(ba []uint8) []uint8 {
+	dec := simplifiedchinese.GBK.NewDecoder()
 	out, _ := dec.Bytes(ba)
 	return out
 }
